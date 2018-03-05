@@ -5,6 +5,13 @@ Edit=nvim
 MDEdit=nvim
 Dropbox="$HOME/Dropbox"
 CurrentGnuCoreutils=true
+kernel=$(uname -s)
+if [ -f $HOME/.config/my-scripts/device-id ]; then
+    settings="$HOME/.config/my-scripts/device-id"
+    hostName=$(grep -iw '^\s*host:' $settings | cut -d: -f2 | xargs)
+    userName=$(grep -iw '^\s*user:' $settings | cut -d: -f2 | xargs)
+    myTimezone=$(grep -iw '^\s*timezone:' $settings | cut -d: -f2 | xargs)
+fi
 
 #################################################################################
 # Mac
@@ -27,7 +34,8 @@ if [[ $(uname -s) == Darwin ]] ; then
     export PATH=~/bin:$PATH
 
     # Lock computer from terminal
-    alias lock='/System/Library/CoreServices/"Menu Extras"/User.menu/Contents/Resources/CGSession -suspend'
+    alias lock='
+    /System/Library/CoreServices/"Menu Extras"/User.menu/Contents/Resources/CGSession -suspend'
 
     # Mute
     alias mute='osascript -e "set Volume 0"'
@@ -38,6 +46,10 @@ if [[ $(uname -s) == Darwin ]] ; then
     # Make Carbon Copy Cloner CLI sane.
     alias ccc='/Applications/Carbon\ Copy\ Cloner.app/Contents/MacOS/ccc'
 
+    # Human readable uptime
+    alias uptime-p="uptime | sed 's/,//g' | cut -f 4-6 -d ' '|
+        sed 's/\(.*\):\(.*\)/\1 hours \2mins/'"
+
 fi
 #################################################################################
 # Linux
@@ -47,11 +59,21 @@ if [[ $(uname -s) == Linux ]] ; then
 
 fi
 #################################################################################
+# Device and Account Specific
+#################################################################################
+if [[ $hostName == "hermes" || $hostName == "elli" || $hostName == "cronus" ||
+    $(uname -n | grep Journalism.ukings.ns.ca) ]] ; then
+    # `<current directory> >`
+    PS1='\[\033[0;35m\]\W > \[\033[0m\]'
+else
+    # `<user>@<current directory> >`
+    PS1='\[\033[0;34m\]\u\[\033[0m\]@\[\033[0;34m\]\h \[\033[0;35m\]\W > \[\033[0m\]'
+fi
+
+#################################################################################
 # All Operating Systems and Devices
 #################################################################################
 if which rbenv > /dev/null; then eval "$(rbenv init -)"; fi
-
-PS1='\[\033[0;34m\]\u\[\033[0m\]@\[\033[0;34m\]\h \[\033[0;35m\]\W > \[\033[0m\]'
 
 # Use Neovim as default editor
 VISUAL=nvim; export VISUAL EDITOR=nvim; export EDITOR
@@ -65,7 +87,6 @@ VISUAL=nvim; export VISUAL EDITOR=nvim; export EDITOR
             alias :Q="exit"
             alias clr="clear"
             alias ..="cd .."
-            alias up="uptime"
         # ls tweaks
             alias la='ls -A' # List all except implied (. ..)
             alias lg='ls | grep -i ' # Grep filtered ls (case insensitive)
@@ -80,11 +101,22 @@ VISUAL=nvim; export VISUAL EDITOR=nvim; export EDITOR
                 alias lA='ls -A | grep -v .DS_Store'
             fi
 
-    # Use NeoVim a bit more
+    # Use NeoVim a bit more (If it actually exists)
     if [[ $(command -v nvim) ]] ; then
         #alias vi='nvim'
         alias vim='nvim'
     fi
+
+    # Dalhousie VPN
+    if [ -x /opt/cisco/anyconnect/bin/vpn ]; then
+        alias dalvpn-connect='/opt/cisco/anyconnect/bin/vpn connect vpn.its.dal.ca'
+        alias dalvpn-exit='/opt/cisco/anyconnect/bin/vpn disconnect'
+    fi
+
+    if [[ $(command -v mpv) ]] ; then
+        alias studystream='mpv --vid=no https://www.youtube.com/playlist?list=PLsUMoyJKBqcn7dk3jC3i1023Ie-BntpgF'
+    fi
+    alias mytime='env TZ=$myTimezone date +"%H:%M %Z"'
 
     #############################################################################
     # Editing specific files and directories #
@@ -98,18 +130,25 @@ VISUAL=nvim; export VISUAL EDITOR=nvim; export EDITOR
     alias mknote="cd $Dropbox/Notes && $MDEdit"
 
     # Open school work
-    alias school="cd $Dropbox/Education/E.\ 2017-2018\ Kings\ II && ranger"
+    alias school="
+        cd $Dropbox/Education/F.\ 2017-2018\ Kings\ II\ Term\ 2 && ranger"
 
     # Christmas notes
-    alias xmas="$MDEdit $Dropbox/Notes/2017\ Christmas.md"
+    alias xmas="$MDEdit $Dropbox/Notes/Christmas\ Gifts.md"
 
     # Journal
-    alias journal="veracrypt --mount $Dropbox/Journal && ranger /Volumes/NO\ Name/ \
-        && veracrypt -d $Dropbox/Journal"
+    if [[ $(uname -s) == Darwin ]] ; then
+        alias journal="veracrypt --text --mount $Dropbox/Journal /Volumes/Journal \
+            && ranger /Volumes/Journal/ && veracrypt -d $Dropbox/Journal"
+    elif [[ $(uname -s ) == Linux ]] ; then
+        alias journal="veracrypt --text --mount $Dropbox/Journal /media/Journal \
+            && ranger /media/Journal/ && veracrypt -d $Dropbox/Journal"
+    fi
 
     #############################################################################
-    # Print weather to terminal
+    # Misc
     #############################################################################
+    # Print weather to terminal
     if [[ $(command -v wget) ]] ; then
         alias weather='wget -qO - http://wttr.in/ | head -7'
         alias todays-weather="wget -qO - http://wttr.in/ | head -17 | tail -n +8"
@@ -117,3 +156,9 @@ VISUAL=nvim; export VISUAL EDITOR=nvim; export EDITOR
         alias weather='curl -s http://wttr.in/ | head -7'
         alias todays-weather="curl -s http://wttr.in/ | head -17 | tail -n +8"
     fi
+
+#################################################################################
+# Remove Variables
+#################################################################################
+unset CurrentGnuCoreutils
+unset MDEdit
