@@ -62,7 +62,7 @@ fi
 # Device and Account Specific
 #################################################################################
 if [[ $hostName == "hermes" || $hostName == "elli" || $hostName == "cronus" ||
-    $(uname -n | grep Journalism.ukings.ns.ca) ]] ; then
+    $(uname -n | grep Journalism.ukings.ns.Ca) ]] ; then
     # `<current directory> >`
     PS1='\[\033[0;35m\]\W > \[\033[0m\]'
 else
