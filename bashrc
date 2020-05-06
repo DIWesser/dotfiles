@@ -1,3 +1,7 @@
+# Source global definitions
+if [ -f /etc/bashrc ]; then
+    . /etc/bashrc
+fi
 
 settings="$HOME/.config/diwesser/device-id"
 
@@ -20,12 +24,16 @@ if [ -f $HOME/.config/diwesser/device-id ]; then
 fi
 
 if [ -f "$HOME/.bash_aliases" ] ; then
-    source "$HOME/.bash_aliases"
+    . "$HOME/.bash_aliases"
 fi
 # <blue><\u><white><@><blue><\h> <purple><\W (CURRENT DIR)> <\$ ($ or #)> <white>
 PS1='\[\033[0;34m\]\u\[\033[0m\]@\[\033[0;34m\]\h \[\033[0;35m\]\W \$ \[\033[0m\]'
 
-# PATH
+# Add scripts etc to PATH
+if [ -d "$HOME/.local/bin" ] ; then
+    export PATH="$PATH:$HOME/.local/bin"
+fi
+
 if [ -d "$HOME/bin" ] ; then
     export PATH="$PATH:$HOME/bin"
 fi
